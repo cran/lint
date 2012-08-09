@@ -55,13 +55,14 @@
 #' 
 #' @export
 make_class_finder <- function(classes){
-    structure(function(..., parse.data) {
+    f <- function(..., parse.data) {
         rows  <- subset(parse.data, parse.data$token.desc %in% classes)
         if(nrow(rows) == 0) return(empty.find)
         lrows <- structure(mlply(rows, data.frame)
                           , split_type=NULL, split_labels=NULL)
         parse2find(lrows)
-    }, classes=classes)
+    }
+    structure(f, classes=classes)
 }
 
 
@@ -84,22 +85,28 @@ find_doc_comment <- make_class_finder(c("ROXYGEN_COMMENT"))
 #' @export
 find_string <- make_class_finder(c("STR_CONST"))
 
+#' @rdname finders
+#' @export
+find_symbol <- make_class_finder("SYMBOL")
 
 #' @rdname finders
 #' @export
-find_function_args <- function(parse.data, ...) {
-  ftokens <- subset(parse.data, parse.data$token.desc=="FUNCTION")
-  ddply(ftokens, "id" , function(d, ..., parse.data) {
+find_function_args <- function(..., parse.data) {
+    ftokens <- subset(parse.data, parse.data$token.desc == "FUNCTION")
+    ddply(ftokens, "id" , .find_function_args1
+         , parse.data = parse.data)[names(empty.find)]
+}
+.find_function_args1 <- function(d, ..., parse.data) {
     p <- d$parent
     function.args <- subset(parse.data, parse.data$parent == d$p & 
       !(parse.data$token.desc %in% c('expr', 'FUNCTION')))
     parse2find(function.args)
-  }, parse.data = parse.data)[names(empty.find)]
 }
-
+  
 #' @rdname finders
 #' @export
-find_function_body <- function(file, parse.data = attr(parser(file)), ...) {
+find_function_body <- function(..., lines, file
+                              , parse.data = attr(parser(file))) {
   f.nodes <- subset(parse.data, parse.data$token.desc == "FUNCTION")
   body.parents  <- ldply(get_children(f.nodes$parent, parse.data, 1), tail, 1)
   body.contents <- find_children(body.parents, parse.data)
@@ -109,12 +116,10 @@ find_function_body <- function(file, parse.data = attr(parser(file)), ...) {
 
 #' @rdname finders
 #' @export
-find_call_args <- function(file, lines=NULL, parse.data=attr(parser(file)), ...) {
+find_call_args <- function(..., file, parse.data = attr(parser(file))) {
   call.nodes <- subset(parse.data, 
     parse.data$token.desc == "SYMBOL_FUNCTION_CALL")
   call.args <- 
     llply(call.nodes$id, get_family, parse.data=parse.data, nancestors=2)
   parse2find(call.args)
 }
-
-

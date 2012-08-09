@@ -1,6 +1,6 @@
 \docType{data}
 \name{stylechecks}
-\alias{lint.tests}
+\alias{lint.style}
 \alias{spacing.indentation.evenindent}
 \alias{spacing.indentation.notabs}
 \alias{spacing.linelength.100}
@@ -10,9 +10,9 @@
 \alias{spacing.spacearoundequals}
 \alias{spacing.spacearoundinfix}
 \alias{spacing.twobeforecomments}
+\alias{stylechecks}
 \alias{style_checks}
 \alias{style_tests}
-\alias{stylechecks}
 \title{Style checks}
 \format{Each test can be defined in several formats and is very flexible.
 A test consists of a names list of attributes.
@@ -48,7 +48,7 @@ A test consists of a names list of attributes.
 
   spacing.twobeforecomments
 
-  lint.tests
+  lint.style
 }
 \description{
   Style checks

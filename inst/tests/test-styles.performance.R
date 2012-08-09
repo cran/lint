@@ -1,5 +1,5 @@
 {############################################################################### 
-# spacing.patterns.R
+# test-styles.performance.R
 # This file is part of the R package lint.
 # 
 # Copyright 2012 Andrew Redd
@@ -7,7 +7,7 @@
 # 
 # DESCRIPTION
 # ===========
-# predefined spacing patterns.
+# tests for pre-defined performance problems.
 # 
 # LICENSE
 # ========
@@ -25,21 +25,10 @@
 # 
 }###############################################################################
 
-#' @rdname stylechecks
-#' @export
-#' @include styles.assignment.R
-#' @include styles.performance.R
-#' @include styles.spacing.R
-lint.style <- list(
-    spacing.twobeforecomments
-  , spacing.spacearoundinfix
-  , spacing.spacearoundequals
-  , spacing.indentation.notabs
-  , spacing.linelength.80
-  , styles.assignment.noeq
-  , styles.assignment.norightassign
-  , styles.assignment.notinfcall
-)
+context("Styles/Performance")
+
+autotest_style('performance.square')
+
 
 
 

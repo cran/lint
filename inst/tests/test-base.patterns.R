@@ -1,13 +1,13 @@
 {############################################################################### 
-# spacing.patterns.R
+# test-base.patterns.R
 # This file is part of the R package lint.
 # 
 # Copyright 2012 Andrew Redd
-# Date: 6/16/2012
+# Date: 7/30/2012
 # 
 # DESCRIPTION
 # ===========
-# predefined spacing patterns.
+# testing for base patterns. 
 # 
 # LICENSE
 # ========
@@ -25,22 +25,14 @@
 # 
 }###############################################################################
 
-#' @rdname stylechecks
-#' @export
-#' @include styles.assignment.R
-#' @include styles.performance.R
-#' @include styles.spacing.R
-lint.style <- list(
-    spacing.twobeforecomments
-  , spacing.spacearoundinfix
-  , spacing.spacearoundequals
-  , spacing.indentation.notabs
-  , spacing.linelength.80
-  , styles.assignment.noeq
-  , styles.assignment.norightassign
-  , styles.assignment.notinfcall
-)
+context("Base Patterns")
 
+test_that("start.characters", {
+    a <- c('a', 'A', '1', '.', '_')
+    y <- c( T ,  T ,  F ,  T ,  F )
+    z <- grepl(start.characters, a, perl=T)
+    expect_equal(y, z)
+})
 
 
 

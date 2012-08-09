@@ -1,5 +1,5 @@
 {############################################################################### 
-# spacing.patterns.R
+# styles.performance.R
 # This file is part of the R package lint.
 # 
 # Copyright 2012 Andrew Redd
@@ -7,7 +7,7 @@
 # 
 # DESCRIPTION
 # ===========
-# predefined spacing patterns.
+# pre-defined performance problems.
 # 
 # LICENSE
 # ========
@@ -25,21 +25,30 @@
 # 
 }###############################################################################
 
-#' @rdname stylechecks
-#' @export
-#' @include styles.assignment.R
-#' @include styles.performance.R
-#' @include styles.spacing.R
-lint.style <- list(
-    spacing.twobeforecomments
-  , spacing.spacearoundinfix
-  , spacing.spacearoundequals
-  , spacing.indentation.notabs
-  , spacing.linelength.80
-  , styles.assignment.noeq
-  , styles.assignment.norightassign
-  , styles.assignment.notinfcall
-)
+#' @name performance-styles
+#' @rdname performance-styles
+#' @docType data
+#' @title Performace Enhancing Styles
+#' @description
+#'  This collection of styles assert checks on known performance improvements.
+#' @format  Lint style checks.
+#' @seealso lint
+#' 
+#' @include base.patterns.R
+#' @exportPattern ^performance\\..*$
+NULL
+
+#' @rdname performance-styles
+#' @export performance.square
+performance.square <- {list(
+    pattern = perl(sprintf("(%s)\\s*\\*\\s*\\1", name.pattern))
+)}
+.testinfo.performance.square <- {list(
+    lines = c('2*2'
+            , 'a*a'
+            , 'a^2')
+  , results = data.frame(line1=2, col1=1, byte1=1, line2=2, col2=3, byte2=3)
+)}
 
 
 

@@ -1,5 +1,5 @@
 {############################################################################### 
-# Conversion.R
+# lint.R
 # This file is part of the R package lint.
 # 
 # Copyright 2012 Andrew Redd
@@ -7,7 +7,7 @@
 # 
 # DESCRIPTION
 # ===========
-# functions for conversion between the difference formats
+# primary lint functions.
 # 
 # LICENSE
 # ========
@@ -39,31 +39,24 @@
 #' @importFrom harvestr noattr
 #' @import foreach
 #' @import dostats
-#' @include lint.patterns.R
 #' @include conversion.R
 #' @include family.R
 #' @include finders.R
 NULL
 
-{ # TODO
-  # ----
-  # * independent function as a check.
-  # * 
-  # 
-} 
-
 find_region <- function(region, file, lines, parse.data){
-    if (length(region)> 0L) {
-        fun.region <- find_fun(region)
+    if (length(region) > 0L) {
+        fun.region <- find_finder_fun(region)
         if(is.function(fun.region)){
             fun.region(file=file, lines=lines, parse.data=parse.data)
         } else if(is.list(fun.region) && length(fun.region) == 1) {
-            fun.region[[1]](file=file, lines=lines, parse.data=parse.data)
+            fun.region[[1]](file = file, lines = lines, parse.data = parse.data)
         } else if(is.list(fun.region) && length(fun.region) >= 2) {
-            fun <- stop
-            fe <- foreach(fun=fun.region, .combine=merge_find
-                            , .multicombine=TRUE, .init=empty.find )
-            fe %do% fun(file=file, lines=lines, parse.data=parse.data)
+            l <- vector('list', length(fun.region))
+            for(i in seq_along(fun.region))
+            l[[i]] <- fun.region[[i]](file = file, lines = lines
+                                      , parse.data = parse.data)
+            Reduce(merge_find, l)
         } else stop("mal-formed region!")
     } else empty.find
 }
@@ -87,7 +80,7 @@ check_pattern <- function(pattern
   , lines
   , ...) {
   if (length(pattern) > 1) {
-    pat=NULL
+    pat <- NULL
     foreach(pat=pattern, .combine=merge_find, .multicombine=TRUE
            , .inorder=FALSE) %do% check_pattern(pat, lines, ...)
   } else {
@@ -125,70 +118,108 @@ with_default <- function(x, default) {
 #' returns the results from the test handler, which should be either a TRUE for
 #' a passed test or the lines, locations, and/or string violating the rules.
 #' @export
-dispatch_test <- function(test, file, parse.data=attr(parser(file), 'data')
-  , lines=readLines(file), quiet=FALSE
-  , warning=with_default(test$warning, FALSE)
+dispatch_test <- function(test, file, parse.data = attr(parser(file), 'data')
+  , lines = readLines(file), quiet = FALSE
+  , warning = with_default(test$warning, FALSE)
 ) {
-  include.spans <- find_region(with_default(test$include.region, character(0))
-                              , file=file, lines=lines, parse.data=parse.data)
-  
-  exclude.region <- 
-             with_default(test$exclude.region, c("find_comment", "find_string"))
-  exclude.spans <- find_region(exclude.region
-                              , file=file, lines=lines, parse.data=parse.data)
-  
-  if(nrow(include.spans) && nrow(exclude.spans))
-    stop("specifying both include and exclude regions is undefined")
+    include.spans <- find_region(with_default(test$include.region, character(0))
+                          , file=file, lines=lines, parse.data=parse.data)
     
-  use.lines = with_default(test$use.lines, TRUE)
-  if (!use.lines) lines <- paste(lines, '\n', collapse='')
-  
-  do_message <- if(quiet){
-    function(...){}
-  } else if(warning) {
-    get("warning", mode="function")
-  } else {
-    get("message", mode="function")
-  }
-
-  if (!is.null(test$pattern)) {
-    test.result <- do.call(check_pattern, append(test, list(lines=lines)))
-    if(isTRUE(test.result) || nrow(test.result)==0) return(TRUE)
+    exclude.region <- 
+         with_default(test$exclude.region, c("find_comment", "find_string"))
+    exclude.spans <- find_region(exclude.region
+                          , file=file, lines=lines, parse.data=parse.data)
     
-    # Check problems for inclusion area
-    if(nrow(include.spans) > 0) {
-        test.result <- span_intersect(test.result, exclude.spans)
+    if(nrow(include.spans) && nrow(exclude.spans))
+        stop("specifying both include and exclude regions is undefined")
+    
+    use.lines <- with_default(test$use.lines, TRUE)
+    if (!use.lines) lines <- paste(lines, '\n', collapse='')
+    
+    do_message <- if(quiet){
+        function(...){}
+    } else if(warning) {
+        get("warning", mode="function")
+    } else {
+        get("message", mode="function")
     }
+
+    if (!is.null(test$pattern)) {
+        test.result <- do.call(check_pattern, append(test, list(lines=lines)))
+    } 
+    else if(!is.null(test$f)) {
+        new.args <- append(test, list(file=file, lines=lines
+                                      , parse.data=parse.data))
+        test.result <- do.call(check_functional, new.args)
+    } 
+    else stop("Ill-formatted check.")
+    
+    if(isTRUE(test.result) || nrow(test.result) == 0) return(TRUE)
+    
+    # check results.
     if(nrow(exclude.spans) > 0) {
         test.result <- span_difference(test.result, exclude.spans)
     }    
-    test.message <- with_default(test$message, test$pattern)
-    str <- sprintf("Lint: %s: found on lines %s", test.message, 
-                   paste(test.result$line1, collapse=', '))
-    do_message(str)
-    return(invisible(test.result))
-  } else
-  stop("Ill-formatted check.")
+    if(nrow(include.spans) > 0) {
+        test.result <- span_intersect(test.result, include.spans)
+    }
+    if(nrow(test.result)){
+        test.message <- with_default(test$message, test$pattern)
+        str <- sprintf("Lint: %s: found on lines %s", test.message, 
+                       format_problem_lines(test.result$line1))
+        do_message(str)
+        return(invisible(test.result))
+    } else return(TRUE)
 }
+
+format_problem_lines <- function(lines, max.to.show = 5) {
+    if(length(lines) <= max.to.show) 
+        return(paste(lines, collapse = ', '))
+    paste(c( head(lines, max.to.show)
+           , sprintf("+%d more.", length(lines) - max.to.show))
+         , collapse = ', ')
+}
+
    
-#' Check a source document for stylistic errors.
+#' Check for stylistic errors.
 #' @param file a vector of file paths.
+#' @param style The list of styles tests to use to check.
 #' @param text text to check
-#' @param tests The list of tests to use to check.
+#' @param recurse recurse into directory and sub-directories.
+#' 
+#' Check source documents for stylistic errors.  The test are given as a list
+#' in  \code{tests}.  If a directory is given all *.R files in that directory 
+#' and sub-directories are checked.  If a file other than a .R or .r file 
+#' is desired it must be given explicitly as the \code{file} argument.
+#' 
 #' 
 #' @family lint
 #' @export
-lint <- function(file, text=NULL, tests = lint.tests) {
-  stopifnot(missing(file)|inherits(file, 'character'))
-  if (missing(file) && !is.null(text)) {
-    stopifnot(inherits(text, "character"))
-    file = textConnection(text)
-    on.exit(close(file))
-  }
+lint <- function(file = '.', style = lint.style, recurse = TRUE, text = NULL) {
+    stopifnot(missing(file) | inherits(file, 'character'))
+    if (missing(file) && !is.null(text)) {
+        stopifnot(inherits(text, "character"))
+        file <- textConnection(text)
+        on.exit(close(file))
+    } else {
+        fi <- file.info(file)
+        files <- if(any(fi$isdir)) {
+            c( file[!fi$isdir]
+             , dir(file[fi$isdir], pattern = ".*\\.[Rr]$"
+                  , full.names = TRUE, recursive = recurse))
+        } else {
+            file
+        }
+    }
+
+    invisible(llply(files, lint_file, style = style))
+}
+
+lint_file <- function(file, style) {
+    message("Lint checking: ", file)
+    parse.data <- attr(parser(file), 'data')
+    lines <- readLines(file)
   
-  parse.data=attr(parser(file), 'data')
-  lines=readLines(file)
-  
-  llply(lint.tests, dispatch_test, file=file
-        , parse.data=parse.data, lines=lines)  
+    invisible(llply(style, dispatch_test, file = file
+        , parse.data = parse.data, lines = lines))
 }

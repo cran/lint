@@ -110,7 +110,8 @@
 #'
 #'
 #' @section Locate data structure:
-#'  locate data is defined as the matrix that comes from \code{\link{str_locate}}.
+#'  locate data is defined as the matrix that comes from 
+#'  \code{\link{str_locate}}.
 #'  It has columns
 #'  \enumerate{
 #'      \item \code{start}
@@ -137,11 +138,11 @@ empty.find <- {data.frame(
 #'  
 #' @export
 parse2find <- function(parse.data) {
-  col1<-byte1<-NULL
+  col1 <- byte1 <- NULL
   if (!inherits(parse.data, 'data.frame') && inherits(parse.data, 'list')) {
     return(ldply(parse.data, parse2find)[names(empty.find)])
   }
-  if(nrow(parse.data)==0) return(empty.find)
+  if(nrow(parse.data) == 0) return(empty.find)
   names1 <- c('line1', 'col1', 'byte1')
   names2 <- c('line2', 'col2', 'byte2')
   pd1 <- parse.data[do.call(order, parse.data[names1]), ]
@@ -149,25 +150,26 @@ parse2find <- function(parse.data) {
   mutate(data.frame(
       head(pd1, 1L)[names1]
     , tail(pd2, 1L)[names2]
-  ), col1=col1+1, byte1=byte1+1)
+  ), col1 = col1 + 1, byte1 = byte1 + 1)
 }
 
 #' @rdname conversion
 #' @export
 find2replace <- function(find.data) {
-  mdply(find.data, function(line1, byte1, line2, byte2, ...){
-    if (line1==line2) {
-      data.frame(line=line1, start = byte1 + 1, end = byte2)
+    mdply(find.data, .find2replace1)[, - seq_len(ncol(find.data))]
+}
+.find2replace1 <- function(line1, byte1, line2, byte2, ...){
+    if (line1 == line2) {
+      data.frame(line = line1, start = byte1 + 1, end = byte2)
     } else {
-      nlines = line2-line1
+      nlines <- line2 - line1
       data.frame(
         line  = c(line1:line2), 
-        start = c(byte1+1, rep(1L, nlines)),
-        end   = c(rep(-1L, nlines), byte2))
+        start = c(byte1 + 1, rep(1L, nlines)),
+        end   = c(rep( - 1L, nlines), byte2))
     }
-  })[, -seq_len(ncol(find.data))]
 }
-
+  
 #' @rdname conversion
 #' @export
 locate2find <- function(loc) {
@@ -183,41 +185,43 @@ locate2find <- function(loc) {
       , byte2 = end)[!is.na(loc$start), names(empty.find)]
 }
 
-do_results_overlap <- function(x, y=x, strict.contains=FALSE) {
-  if (nrow(x) > 1) {
-    force(y)
-    x   <- mlply(x,data.frame)
-    res <- llply(x, do_results_overlap, y)
-    return(laply(res, noattr))
-  }
-  if (nrow(y) > 1) {
+do_results_overlap_1 <- function(x, y, strict.contains) {
+    #' @note assumes that x and y are 1 row each.
+    if (x$line2 < y$line1) return(FALSE)
+    if (x$line1 > y$line2) return(FALSE)
+    x.start <- x$line1
+    x.end   <- x$line2
+    y.start <- y$line1
+    y.end   <- y$line2
+    max.byte <- max(x$byte1, x$byte2, y$byte1, y$byte2)
+    if (max.byte > 0) {
+        x.start <- x.start + x$byte1 / max.byte
+        x.end   <- x.end   + x$byte2 / max.byte 
+        y.start <- y.start + y$byte1 / max.byte
+        y.end   <- y.end   + y$byte2 / max.byte
+    }
+    if(strict.contains) {
+        if (x.start >= y.start && x.end <= y.end) return(TRUE)
+    } else {
+        if (x.start <= y.start && y.start <= x.end) return(TRUE)
+        if (x.start <= y.end   && y.end   <= x.end) return(TRUE)
+        if (y.start <= x.start && x.start <= y.end) return(TRUE)
+        if (y.start <= x.end   && x.end   <= y.end) return(TRUE)
+    }
+    return(FALSE)
+}
+do_results_overlap <- function(x, y = x, strict.contains = FALSE) {
+    #' @note assumes x and y are find results formatted data frames.
     force(x)
-    y <- mlply(y,data.frame)
-    res <- llply(y, do_results_overlap, x=x)
-    return(laply(res, noattr))
-  }
-  if (x$line2 < y$line1) return(FALSE)
-  if (x$line1 > y$line2) return(FALSE)
-  x.start <- x$line1
-  x.end   <- x$line2
-  y.start <- y$line1
-  y.end   <- y$line2
-  max.byte <- max(x$byte1, x$byte2, y$byte1, y$byte2)
-  if (max.byte>0) {
-    x.start <- x.start + x$byte1/max.byte
-    x.end   <- x.end   + x$byte2/max.byte 
-    y.start <- y.start + y$byte1/max.byte
-    y.end   <- y.end   + y$byte2/max.byte
-  }
-  if(strict.contains) {
-    if (x.start >= y.start && x.end <= y.end) return(TRUE)
-  } else {
-    if (x.start <= y.start && y.start <= x.end) return(TRUE)
-    if (x.start <= y.end   && y.end   <= x.end) return(TRUE)
-    if (y.start <= x.start && x.start <= y.end) return(TRUE)
-    if (y.start <= x.end   && x.end   <= y.end) return(TRUE)
-  }
-  return(FALSE)
+    force(y)
+    y <- mlply(y, data.frame)
+    x <- mlply(x, data.frame)
+    z <- matrix(NA, length(x), length(y))
+    for(i in seq_along(x)) for(j in seq_along(y))
+        z[i, j] <- do_results_overlap_1(x[[i]], y[[j]]
+                                        , strict.contains = strict.contains)
+    return(z)
+    #' @return logical matrix of dimention \code{nrow(x)} by \nrow{nrow(y)}.
 }
 
 merge_find <- function(...){
@@ -239,23 +243,13 @@ merge_find <- function(...){
     if(nrow(y) == 0) return(x)
     if(nrow(x) == 0) return(y)
     keep <- names(empty.find)
-    overlaps <- data.frame(which(do_results_overlap(x,y), arr.ind=T))
+    overlaps <- data.frame(which(do_results_overlap(x,y), arr.ind = T))
     names(overlaps) <- c('x.idx', 'y.idx')
     if(nrow(overlaps) >= 1) {
-        merged <- mdply(overlaps, function(x.idx, y.idx, x, y){
-            x.row <- x[x.idx, ]
-            y.row <- y[y.idx, ]
-            data.frame(
-              line1 = min(x.row$line1, y.row$line1),
-               col1 = min( x.row$col1,  y.row$col1),
-              byte1 = min(x.row$byte1, y.row$byte1),
-              line2 = min(x.row$line2, y.row$line2),
-               col2 = min( x.row$col2,  y.row$col2),
-              byte2 = min(x.row$byte2, y.row$byte2))
-            }, x=x, y=y)
+        merged <- mdply(overlaps, .merge_by_idx1, x = x, y = y)
         new.finds <- rbind(merged[keep],
-        x[-overlaps$x.idx, keep],
-        y[-overlaps$y.idx, keep])
+        x[ - overlaps$x.idx, keep],
+        y[ - overlaps$y.idx, keep])
         new.finds[do.call(order, new.finds), ]
     } else {
         combined <- rbind(x[keep], y[keep])
@@ -265,25 +259,7 @@ merge_find <- function(...){
     #'  overlaps were merged
   }
 }
-
-valid_find <- function(x, strict=FALSE, extended=TRUE){(
-    is(x,'data.frame')
- && if(strict)
-        identical(names(empty.find), names(x))
-    else
-        all(names(empty.find) %in% names(x))
- && if(extended)
-        !any(do_results_overlap(x) & !diag(T, nrow(x), nrow(x)))
-    else TRUE
- && !any(x$line1==0) && !any(x$col1==0) && !any(x$byte1==0)
- && !any(x$line1 < x$line2)
-)}
-
-span_intersect <- function(x, y){
-    if(nrow(x)==0 || nrow(y)==0) return(empty.find)
-    overlaps <- data.frame(which(do_results_overlap(x,y), arr.ind=T))
-    names(overlaps) <- c('x.idx', 'y.idx')
-    mdply(overlaps, function(x.idx, y.idx, x, y){
+.merge_by_idx1 <- function(x.idx, y.idx, x, y){
     x.row <- x[x.idx, ]
     y.row <- y[y.idx, ]
     data.frame(
@@ -293,15 +269,64 @@ span_intersect <- function(x, y){
       line2 = min(x.row$line2, y.row$line2),
        col2 = min( x.row$col2,  y.row$col2),
       byte2 = min(x.row$byte2, y.row$byte2))
-    }, x=x, y=y)[names(empty.find)]
 }
 
-span_difference <- function(x, y, strict=FALSE) {
+valid_find <- function(x, strict = FALSE, extended = TRUE){(
+    is(x,'data.frame')
+ && if(strict) {
+        identical(names(empty.find), names(x))
+    } else {
+        all(names(empty.find) %in% names(x))
+    }
+ && if(extended) {
+        !any(do_results_overlap(x) & !diag(T, nrow(x), nrow(x)))
+    } else {
+        TRUE
+    }
+ && !any(x$line1 == 0) && !any(x$col1 == 0) && !any(x$byte1 == 0)
+ && !any(x$line1 < x$line2)
+)}
+
+span_intersect <- function(x, y){
+    if(nrow(x) == 0 || nrow(y) == 0) return(empty.find)
+    overlaps <- data.frame(which(do_results_overlap(x,y), arr.ind=T))
+    if(nrow(overlaps) == 0) return(empty.find)
+    names(overlaps) <- c('x.idx', 'y.idx')
+    mdply(overlaps, .span_intersect1, x=x, y=y)[names(empty.find)]
+}
+.span_intersect1 <- function(x.idx, y.idx, x, y){
+    x.row <- x[x.idx, ]
+    y.row <- y[y.idx, ]
+
+    line1 <- max(x.row$line1, y.row$line1)
+    col1  <- if(x.row$line1 == y.row$line1) max(x.row$col1, y.row$col1)
+             else if(x.row$line1 < y.row$line1) y.row$col1
+             else x.row$col1
+    byte1 <- if(x.row$line1 == y.row$line1) max(x.row$byte1, y.row$byte1)
+             else if(x.row$line1 < y.row$line1) y.row$byte1
+             else x.row$byte1
+    line2 <- min(x.row$line2, y.row$line2)
+    col2  <- if(x.row$line2 == y.row$line2) min(x.row$col2, y.row$col2)
+             else if(x.row$line2 > y.row$line2) y.row$col2
+             else x.row$col2
+    byte2 <- if(x.row$line2 == y.row$line2) min(x.row$byte2, y.row$byte2)
+             else if(x.row$line2 > y.row$line2) y.row$byte2
+             else x.row$byte2
+
+    data.frame( line1 = line1
+              ,  col1 =  col1
+              , byte1 = byte1
+              , line2 = line2
+              ,  col2 =  col2
+              , byte2 = byte2)
+}
+
+span_difference <- function(x, y, strict = FALSE) {
 #' @param x find formatted data.frame
 #' @param y find formatted data.frame
 #' @param strict should a strict difference be taken or only 
 #'               those of x not completly contained in y (default).
-    if(nrow(x)==0 || nrow(y)==0) return(x)
+    if(nrow(x) == 0 || nrow(y) == 0) return(x)
     overlaps <- do_results_overlap(x,y, TRUE)
     xo <- apply(overlaps, 1, any)
     if(!strict) {

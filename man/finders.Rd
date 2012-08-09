@@ -6,6 +6,7 @@
 \alias{find_function_args}
 \alias{find_function_body}
 \alias{find_string}
+\alias{find_symbol}
 \alias{make_class_finder}
 \title{Finder Functions
 
@@ -37,13 +38,15 @@
 
   find_string(..., parse.data)
 
-  find_function_args(parse.data, ...)
+  find_symbol(..., parse.data)
 
-  find_function_body(file, parse.data = attr(parser(file)),
-    ...)
+  find_function_args(..., parse.data)
 
-  find_call_args(file, lines = NULL,
-    parse.data = attr(parser(file)), ...)
+  find_function_body(..., lines, file,
+    parse.data = attr(parser(file)))
+
+  find_call_args(..., file,
+    parse.data = attr(parser(file)))
 }
 \arguments{
   \item{classes}{with \code{make_class_finder} the parser
