@@ -10,9 +10,9 @@
 \alias{spacing.spacearoundequals}
 \alias{spacing.spacearoundinfix}
 \alias{spacing.twobeforecomments}
-\alias{stylechecks}
 \alias{style_checks}
 \alias{style_tests}
+\alias{stylechecks}
 \title{Style checks}
 \format{Each test can be defined in several formats and is very flexible.
 A test consists of a names list of attributes.
@@ -22,7 +22,7 @@ A test consists of a names list of attributes.
   \item \code{message} The message to be displayed.
   \item \code{include.region} lists regions to restrict the search to.
         Can be a character vector specifying the known regions, or a list of
-        functions that interpret output from \code{\link{parser}}.
+        functions that interpret output from \code{\link{getParseData}}.
   \item \code{exclude.region=c('comments', 'string')} lists regions to
         restrict the search to. Operates the sames as \code{include.region}.
   \item \code{use.lines=T} should the pattern be evaluated in lines (default)

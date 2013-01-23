@@ -3,7 +3,7 @@
 \title{Dispatch tests to the appropriate handler}
 \usage{
   dispatch_test(test, file,
-    parse.data = attr(parser(file), "data"),
+    parse.data = getParseData(parse(file, keep.source = TRUE)),
     lines = readLines(file), quiet = FALSE,
     warning = with_default(test$warning, FALSE))
 }
@@ -12,7 +12,8 @@
 
   \item{file}{the file to check}
 
-  \item{parse.data}{parse data from \code{\link{parser}}}
+  \item{parse.data}{parse data from
+  \code{\link{getParseData}}}
 
   \item{lines}{the lines to evaluate, overrides file.}
 

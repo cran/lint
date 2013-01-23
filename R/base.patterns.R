@@ -16,7 +16,7 @@
 # Foundation, either version 3 of the License, or (at your option) any later 
 # version.
 # 
-# dostats is distributed in the hope that it will be useful, but WITHOUT ANY 
+# lint is distributed in the hope that it will be useful, but WITHOUT ANY 
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS 
 # FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 # 
@@ -29,15 +29,15 @@
 #' @rdname base-patterns
 #' @title Base Patterns
 #' @description
-#'  Use these perl regular expressions to help build pattern based styles.
+#'  Use these Perl regular expressions to help build pattern based styles.
 #' @exportPattern .*\\.characters
 #' @exportPattern .*\\.constant
 NULL
 
 if(getRversion() < "2.15.0") {
-	paste0 <- function(..., collapse=NULL) {
-		paste(..., collapse=collapse, sep='')
-	}
+    paste0 <- function(..., collapse = NULL) {
+        paste(..., collapse=collapse, sep = '')
+    }
 }
 
 
@@ -78,7 +78,8 @@ arith.opp <- c( '+'  = '\\+'
               , '/'  = '\\/'
               , '^'  = '\\^'
               , '-'  = '(?<![<])(-)(?![>])'
-              , '**' = '\\*\\*')
+              , '**' = '\\*\\*'
+              )
 logical.opp <- c(  '|' = '(?<![|])\\|(?![|])'
                 ,  '<' = '(?<![<-])(>)(?![>=])'
                 ,  '>' = '(?<![<])(<)(?![>=-])'
@@ -94,15 +95,14 @@ assign.opp  <- c( '='   = '(?<![<>=!])(=)(?!=)'
                 , '<-'  = '(?<![<])(<-)'
                 , '->'  = '(->)(?![>])'
                 , '<<-' = '<<-'
-                , '->>' = '->>')
+                , '->>' = '->>'
+                )
 special.opp <- c('%[^%]*%')
 all.opp    <- c(arith.opp, logical.opp, assign.opp, special.opp)
 infix.noeq <- setdiff(all.opp, all.opp['='])
 no.lead.rx <- "(&<[^\\s\\^\\-!%+*/<>=\\|&)"
-no.preceeding.space.rx <- "(?<!\\s)"
-no.trailing.space.rx   <- "(?!\\s)"
-
-
-
-
+no.preceeding.space.rx <- "(?<=[^\\s])"
+no.trailing.space.rx   <- "(?=[^\\s])"
+no.preceeding.percent  <- "(?<!%)"
+no.trailing.percent    <- "(?!%)"
 

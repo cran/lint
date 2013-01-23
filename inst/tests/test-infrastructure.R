@@ -9,6 +9,7 @@
 # 
 ################################################################################
 context("Infrastructure")
+library(stringr)
 
 test_that('find_region returns empty.find for empty.regions',{
     expect_that(find_region(character(0),,,), is_identical_to(empty.find))
@@ -34,13 +35,13 @@ test_that("check_pattern", {
   expect_that(check_pattern(lines, "123")$line1, is_equivalent_to(1L)
     , 'find the right line')
   expect_that(valid_find(check_pattern(lines, "123")), is_true()
-    , 'return type is a valid find formated data.frame')
+    , 'return type is a valid find formatted data.frame')
 })
 test_that("dispatch_test", {
   file <- 
-  check.file <- system.file("examples/checks.R", package="lint")
+  check.file <- find_example("checks.R", package="lint")
   pd <-
-  parse.data <- attr(parser(check.file), 'data')
+  parse.data <- getParseData(parse(check.file, keep.source=TRUE))
   expect_that(
     dispatch_test(list(exclude.region=character(0)), check.file)
   , throws_error("Ill-formatted check."))
@@ -50,7 +51,7 @@ test_that("dispatch_test", {
     "abc",
     "xyz")
   parse.data <- 
-  pd <- attr(parser(text=paste(lines,'\n', collapse='')), 'data')
+  pd <- getParseData(parse(text=paste(lines,'\n', collapse=''), keep.source=TRUE))
   test <- list(pattern='abc')
   expect_that(
       dispatch_test(test, , pd, lines, warning=T)
@@ -66,7 +67,7 @@ test_that("dispatch_test", {
 })
 test_that("lint", {
     file <- 
-    check.file <- system.file("examples/checks.R", package="lint")
+    check.file <- find_example("checks.R", package="lint")
         
     lint.tests <- list(
           spacing.twobeforecomments  = spacing.twobeforecomments

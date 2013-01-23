@@ -16,7 +16,7 @@
 # Foundation, either version 3 of the License, or (at your option) any later 
 # version.
 # 
-# dostats is distributed in the hope that it will be useful, but WITHOUT ANY 
+# lint is distributed in the hope that it will be useful, but WITHOUT ANY 
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS 
 # FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 # 
@@ -35,7 +35,6 @@
 #' 
 #' @import plyr
 #' @import stringr
-#' @importFrom parser parser
 #' @importFrom harvestr noattr
 #' @import foreach
 #' @import dostats
@@ -57,7 +56,7 @@ find_region <- function(region, file, lines, parse.data){
             l[[i]] <- fun.region[[i]](file = file, lines = lines
                                       , parse.data = parse.data)
             Reduce(merge_find, l)
-        } else stop("mal-formed region!")
+        } else stop("malformed region!")
     } else empty.find
 }
 
@@ -68,7 +67,7 @@ find_region <- function(region, file, lines, parse.data){
 #' 
 #' @param lines character vector of lines of text to check, output from 
 #'   \code{\link{readLines}}.
-#' @param pattern perl compatible regular expression.
+#' @param pattern Perl compatible regular expression.
 #' @param ... discarded.
 #' @return returns an integer vector of the problem lines if problems were 
 #'   found. otherwise returns TRUE if the lines pass the check. 
@@ -89,6 +88,36 @@ check_pattern <- function(pattern
   }
 }
 
+#' Find an example file.
+#' 
+#' only for helping with testthat/devtools testing.
+#' @keywords internal
+find_example <- function(file, package = NULL){
+    # cat(getwd(), '\n')
+    rf <- system.file("examples", file, package=package, mustWork=FALSE)
+    if (rf != "") return(rf) 
+    {
+        dcf <- file.path('.', 'DESCRIPTION')
+        if (file.exists(dcf) && (read.dcf(dcf)[1,'Package'] == package)) {
+            rf <- file.path('.', 'inst', 'examples', file)
+                if (rf != "") return(rf)
+        }
+    }
+    if(file.exists(package)) {
+        dcf <- file.path(package, 'DESCRIPTION')
+        if (file.exists(dcf) && (read.dcf(dcf)$Package == package)) {
+            rf <- file.path('.', 'inst', 'examples', file)
+                if (rf != "") return(rf)
+        }
+    }
+    rf <- file.path('..', 'examples', file)
+    if(file.exists(rf)) 
+        return(rf)
+    stop(sprintf("could not find the file %s", file))
+}
+
+
+
 #' Look for an argument.
 #' 
 #' @param x an object
@@ -105,7 +134,7 @@ with_default <- function(x, default) {
 #' Dispatch tests to the appropriate handler
 #' @param test the test
 #' @param file the file to check
-#' @param parse.data parse data from \code{\link{parser}}
+#' @param parse.data parse data from \code{\link{getParseData}}
 #' @param lines the lines to evaluate, overrides file.
 #' @param quiet should the test be quiet, i.e. no messages or warnings?
 #' @param warning should messages be upgraded to warnings, ignored if 
@@ -118,7 +147,9 @@ with_default <- function(x, default) {
 #' returns the results from the test handler, which should be either a TRUE for
 #' a passed test or the lines, locations, and/or string violating the rules.
 #' @export
-dispatch_test <- function(test, file, parse.data = attr(parser(file), 'data')
+dispatch_test <- 
+function(test, file
+        , parse.data = getParseData(parse(file, keep.source=TRUE))
   , lines = readLines(file), quiet = FALSE
   , warning = with_default(test$warning, FALSE)
 ) {
@@ -199,7 +230,8 @@ lint <- function(file = '.', style = lint.style, recurse = TRUE, text = NULL) {
     stopifnot(missing(file) | inherits(file, 'character'))
     if (missing(file) && !is.null(text)) {
         stopifnot(inherits(text, "character"))
-        file <- textConnection(text)
+        file <- textConnection(text, 'rt', local=TRUE)
+        files <- list(file)
         on.exit(close(file))
     } else {
         fi <- file.info(file)
@@ -216,9 +248,10 @@ lint <- function(file = '.', style = lint.style, recurse = TRUE, text = NULL) {
 }
 
 lint_file <- function(file, style) {
-    message("Lint checking: ", file)
-    parse.data <- attr(parser(file), 'data')
+    message("Lint checking: ", ifelse(inherits(file, 'character')
+                                     , file, class(file)[[1]]))
     lines <- readLines(file)
+    parse.data <- getParseData(parse(text=lines, keep.source=TRUE))
   
     invisible(llply(style, dispatch_test, file = file
         , parse.data = parse.data, lines = lines))

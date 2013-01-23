@@ -8,7 +8,7 @@
   \item{lines}{character vector of lines of text to check,
   output from \code{\link{readLines}}.}
 
-  \item{pattern}{perl compatible regular expression.}
+  \item{pattern}{Perl compatible regular expression.}
 
   \item{...}{discarded.}
 }

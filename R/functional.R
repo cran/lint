@@ -16,7 +16,7 @@
 # Foundation, either version 3 of the License, or (at your option) any later 
 # version.
 # 
-# dostats is distributed in the hope that it will be useful, but WITHOUT ANY 
+# lint is distributed in the hope that it will be useful, but WITHOUT ANY 
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS 
 # FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 # 
@@ -45,7 +45,7 @@
 #' @param file file name of the file being tested.  File is not guaranteed to 
 #'             be an on disk file but could be a \link{connection}.
 #' @param lines character vector of the lines of the file.
-#' @param parse.data the data attribute of the parser output.
+#' @param parse.data data frame with parse data from \code{\link{getParseData}}.
 #' @param ... discarded.
 #' 
 #' @return The return value of f shouls be a find formated data frame.

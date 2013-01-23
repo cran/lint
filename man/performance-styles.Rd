@@ -1,8 +1,8 @@
 \docType{data}
 \name{performance-styles}
-\alias{performance.square}
 \alias{performance-styles}
-\title{Performace Enhancing Styles}
+\alias{performance.square}
+\title{Performance Enhancing Styles}
 \format{Lint style checks.}
 \usage{
   performance.square

@@ -4,8 +4,8 @@
 \alias{styles.assignment.noeq}
 \alias{styles.assignment.norightassign}
 \alias{styles.assignment.notinfcall}
-\title{Assignemnt Style}
-\format{style tests for assignment opperators.}
+\title{Assignment Style}
+\format{style tests for assignment operators.}
 \usage{
   styles.assignment.noeq
 
@@ -14,7 +14,7 @@
   styles.assignment.notinfcall
 }
 \description{
-  Assignemnt Style
+  Assignment Style
 }
 \keyword{datasets}
 

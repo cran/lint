@@ -32,7 +32,7 @@
   numeric.constant
 }
 \description{
-  Use these perl regular expressions to help build pattern
+  Use these Perl regular expressions to help build pattern
   based styles.
 }
 \keyword{datasets}

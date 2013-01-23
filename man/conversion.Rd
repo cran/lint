@@ -6,13 +6,11 @@
 \alias{locate2find}
 \alias{parse2find}
 \title{Lint internal data structures}
-\format{'data.frame':	0 obs. of  6 variables:
+\format{'data.frame':	0 obs. of  4 variables:
  $ line1: int 
  $ col1 : int 
- $ byte1: int 
  $ line2: int 
- $ col2 : int 
- $ byte2: int}
+ $ col2 : int}
 \usage{
   empty.find
 
@@ -26,10 +24,13 @@
   Lint internal data structures
 }
 \details{
-  parse2find Expects either a parse formatted data.frame or
-  a list of data.frames.  each data.frame is a contiguous
-  region that is collaped into a single find formatted
-  data.frame, one row for each region.
+  parse2find Deprecated.  Due to the changes in R version
+  3.0 this function is no longer necessary
+
+  Expects either a parse formatted data.frame or a list of
+  data.frames.  each data.frame is a contiguous region that
+  is collapsed into a single find formatted data.frame, one
+  row for each region.
 }
 \section{Introduction}{
   lint makes use of several functions from different
@@ -37,38 +38,35 @@
   These functions provide utilities for converting between
   the different formats.
 
-  The formats are: \enumerate{ \item parse - data from the
-  data atribute of a \code{\link{parser}} object.  In parse
-  data each element of an expression has it's own row.
-  \item find - similar to parse but gives a row for each
-  region or expression of interest.  \item replace - for
-  use with \code{\link[stringr:str_sub]{stringr}}.  Uses a
-  column structure with start and end, organized into a
-  matrix with a row for each line.  \item locate - results
-  from \code{\link{str_locate}} from stringr.  same as
-  replace for most purposes but does not include a string.
-  }
+  The formats are: \enumerate{ \item parse - from the
+  \code{\link{getParseData}} function.  In parse data each
+  element of an expression has it's own row.  \item find -
+  similar to parse but gives a row for each region or
+  expression of interest.  \item replace - for use with
+  \code{\link[stringr:str_sub]{stringr}}.  Uses a column
+  structure with start and end, organized into a matrix
+  with a row for each line.  \item locate - results from
+  \code{\link{str_locate}} from stringr.  same as replace
+  for most purposes but does not include a string.  }
 }
 
 \section{parse data structure}{
   Parse data structure originates from the
-  \code{\link{parser}} function, which returns an objects
-  with the attribute '\code{data}'.  Parse formatted data
-  contains a row for every token, string, and expression.
-  The data frame describes a tree structure with each row a
-  node.  Each node has a parent unless it is a root node
-  i.e. parent==0.  It has the following columns.
-  \enumerate{ \item \code{line1} starting line of the
-  expression.  \item \code{col1} starting column.  \item
-  \code{byte1} starting byte, the same as col1 for ascii.
+  \code{\link{getParseData}} function,which returns an
+  objects with the attribute '\code{data}'.  Parse
+  formatteddata contains a row for every token, string, and
+  expression.  The data frame describes a tree structure
+  with each row a node.  Each node has a parent unless it
+  is a root node i.e. parent==0.  It has the following
+  columns.  \enumerate{ \item \code{line1} starting line of
+  the expression.  \item \code{col1} starting column.
   \item \code{line2} ending line of the expression.  \item
-  \code{col2} ending column.  \item \code{byte2} ending
-  byte.  \item \code{token} the token class number.  \item
-  \code{id} the unique id of the expression \item
-  \code{parent} the parent of the expression, 0 if none.
-  \item \code{top_level} top_level, which top level
-  expression is the expression associated with \item
-  \code{token.desc} class name of the token.  \item
+  \code{col2} ending column.  \item \code{token} the token
+  class number.  \item \code{id} the unique id of the
+  expression \item \code{parent} the parent of the
+  expression, 0 if none.  \item \code{top_level} top_level,
+  which top level expression is the expression associated
+  with \item \code{token} class name of the token.  \item
   \code{terminal} is this a terminal node? i.e. has no
   child nodes.  \item \code{text} the actual text of the
   expression.  }
@@ -81,21 +79,21 @@
 
 \section{Find data structure}{
   For the purposes of the data the find data consists of a
-  single row for each section/region with the first 6
+  single row for each section/region with the first 4
   columns of parse.data; the columns \code{line1},
-  \code{col1}, \code{byte1}, \code{line2}, \code{col2}, and
-  \code{byte2}, marking the beginning and end of a section.
-  This is a condensation of the parse data which would have
-  the same columns as well as additional columns, and a row
-  for each expression in the region.
+  \code{col1}, \code{line2}, and \code{col2}, marking the
+  beginning and end of a section.  This is a condensation
+  of the parse data which would have the same columns as
+  well as additional columns, and a row for each expression
+  in the region.
 
   Find formatted data is defined to be R or 1 based arrays
   and inclusive.  the first two elements would be
   \code{col1=1, col2=2}.
 
-  Although both \code{col} and \code{byte} elements are
-  retained in conversion functions, at this time only
-  \code{col} columns are used internally.
+  Although both \code{col} elements are retained in
+  conversion functions, at this time only \code{col}
+  columns are used internally.
 }
 
 \section{Replace data structure}{

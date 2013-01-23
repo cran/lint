@@ -1,7 +1,7 @@
 \name{functional.Rd}
 \alias{check_functional}
-\alias{functional.Rd}
 \alias{function_style}
+\alias{functional.Rd}
 \title{function based tests}
 \usage{
   check_functional(f, ..., file, lines, parse.data)
@@ -16,8 +16,8 @@
 
   \item{lines}{character vector of the lines of the file.}
 
-  \item{parse.data}{the data attribute of the parser
-  output.}
+  \item{parse.data}{data frame with parse data from
+  \code{\link{getParseData}}.}
 
   \item{...}{discarded.}
 }

@@ -1,5 +1,4 @@
 # conversion examples
-library(parser)
 library(stringr)
 text <- "
 hw <- function(){
@@ -10,11 +9,12 @@ cat(my.msg, '\n')
 }
 "
 lines <- readLines(textConnection(text))
-(p <- attr(parser(text=text), 'data'))
+p <- parse(text=text, keep.source=TRUE)
+(pd <- getParseData(p))
 (l <- str_locate('Hello', string=lines))
 
 (f <- locate2find(l))
 (r <- find2replace(f))
 
-(s <- lint:::find_string(parse.data=p))
+(s <- lint:::find_string(parse.data=pd))
 parse2find(s)

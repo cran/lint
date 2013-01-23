@@ -16,7 +16,7 @@
 # Foundation, either version 3 of the License, or (at your option) any later 
 # version.
 # 
-# dostats is distributed in the hope that it will be useful, but WITHOUT ANY 
+# lint is distributed in the hope that it will be useful, but WITHOUT ANY 
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS 
 # FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 # 
@@ -28,7 +28,7 @@
 #' @name performance-styles
 #' @rdname performance-styles
 #' @docType data
-#' @title Performace Enhancing Styles
+#' @title Performance Enhancing Styles
 #' @description
 #'  This collection of styles assert checks on known performance improvements.
 #' @format  Lint style checks.
@@ -47,7 +47,7 @@ performance.square <- {list(
     lines = c('2*2'
             , 'a*a'
             , 'a^2')
-  , results = data.frame(line1=2, col1=1, byte1=1, line2=2, col2=3, byte2=3)
+  , results = data.frame(line1=2, col1=1, line2=2, col2=3)
 )}
 
 
